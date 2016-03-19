@@ -15,3 +15,5 @@ azure group create <name> <region>
 ## deploy the applicaiton gateway
 azure group deployment create  -f arm/appgateway.json -e arm/appgatewayparams.json gatewa-test ag-deploy1
  
+ ## logs of the deployment
+ azure group log show "gatewa-test" --last-deployment
