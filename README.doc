@@ -1,0 +1,17 @@
+
+
+# azure login
+azure login
+
+# list out subsciptions
+azure account list
+
+# set subscription
+azure account set <subscirption/orgid>
+
+# create a RG
+azure group create <name> <region>
+
+## deploy the applicaiton gateway
+azure group deployment create  -f arm/appgateway.json -e arm/appgatewayparams.json gatewa-test ag-deploy1
+ 

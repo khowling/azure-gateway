@@ -1,0 +1,46 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "North Europe"
+    },
+    "virtualNetworkName": {
+      "value": "gatewa-test"
+    },
+    "vnetAddressPrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "subnetName": {
+      "value": "gateway"
+    },
+    "subnetPrefix": {
+      "value": "10.0.1.0/24"
+    },
+    "applicationGatewayName": {
+      "value": "gateway1"
+    },
+    "applicationGatewaySize": {
+      "value": "Standard_Small"
+    },
+    "applicationGatewayInstanceCount": {
+      "value": 1
+    },
+    "frontendPort": {
+      "value": 80
+    },
+    "backendPort": {
+      "value": 3000
+    },
+    "backendIPAddresses": {
+      "value": [
+        {
+          "IpAddress": "10.0.0.4"
+        }
+      ]
+    },
+    "cookieBasedAffinity": {
+      "value": "Disabled"
+    }
+  }
+}
