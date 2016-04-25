@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationGatewayConfiguration xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/windowsazure">
+    <FrontendPorts>
+        <FrontendPort>
+            <Name>appGatewayFrontendPort</Name>
+            <Port>80</Port>
+        </FrontendPort>
+    </FrontendPorts>
+    <BackendAddressPools>
+        <BackendAddressPool>
+            <Name>appGatewayBackendPool</Name>
+            <IPAddresses>
+                <IPAddress>10.0.1.4</IPAddress>
+            </IPAddresses>
+        </BackendAddressPool>
+    </BackendAddressPools>
+    <BackendHttpSettingsList>
+        <BackendHttpSettings>
+            <Name>appGatewayBackendHttpSettings</Name>
+            <Port>80</Port>
+            <Protocol>Http</Protocol>
+            <CookieBasedAffinity>Disabled</CookieBasedAffinity>
+        </BackendHttpSettings>
+    </BackendHttpSettingsList>
+    <HttpListeners>
+        <HttpListener>
+            <Name>appGatewayHttpListener1</Name>
+            <FrontendPort>appGatewayFrontendPort</FrontendPort>
+            <Protocol>Http</Protocol>
+        </HttpListener>
+    </HttpListeners>
+    <HttpLoadBalancingRules>
+        <HttpLoadBalancingRule>
+            <Name>rule1</Name>
+            <Type>basic</Type>
+            <BackendHttpSettings>appGatewayBackendHttpSettings</BackendHttpSettings>
+            <Listener>appGatewayHttpListener1</Listener>
+            <BackendAddressPool>appGatewayBackendPool</BackendAddressPool>
+        </HttpLoadBalancingRule>
+    </HttpLoadBalancingRules>
+</ApplicationGatewayConfiguration>

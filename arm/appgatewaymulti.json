@@ -1,0 +1,401 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "North Europe",
+            "metadata": {
+                "description": "Location to deploy to"
+            }
+        },
+        "addressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "Address prefix for the Virtual Network"
+            }
+        },
+        "subnetPrefixGW": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Gateway Subnet prefix"
+            }
+        },
+        "subnetPrefixWEB": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "Web Subnet prefix"
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "allowedValues": [
+                "Standard_Small",
+                "Standard_Medium",
+                "Standard_Large"
+            ],
+            "defaultValue": "Standard_Medium",
+            "metadata": {
+                "description": "Sku Name"
+            }
+        },
+        "capacity": {
+            "type": "int",
+            "defaultValue": 2,
+            "metadata": {
+                "description": "Number of instances"
+            }
+        },
+        "backendIpAddress1": {
+            "type": "string",
+            "defaultValue": "10.0.1.4",
+            "metadata": {
+                "description": "IP Address for Backend Server 1 in WEB subnet"
+            }
+        },
+        "backendIpAddress2": {
+            "type": "string",
+            "defaultValue": "10.0.1.2",
+            "metadata": {
+                "description": "IP Address for Backend Server 2  in WEB subnet"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Password for the Virtual Machine."
+            }
+        }
+    },
+    "variables": {
+        "applicationGatewayName": "AppGW",
+        "publicIPAddressName1": "khweb01",
+        "publicIPAddressName2": "khweb02",
+        "virtualNetworkName": "AppGWTestVnet",
+        "subnetNameGW": "GatewaySubnet",
+        "subnetNameWEB": "WebSubnet",
+        "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+        "subnetRefGW": "[concat(variables('vnetID'),'/subnets/',variables('subnetNameGW'))]",
+        "subnetRefWEB": "[concat(variables('vnetID'),'/subnets/',variables('subnetNameWEB'))]",
+        "publicIPRef1": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName1'))]",
+        "publicIPRef2": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName2'))]",
+        "applicationGatewayID": "[resourceId('Microsoft.Network/applicationGateways',variables('applicationGatewayName'))]",
+        "apiVersion": "2015-05-01-preview",
+        "vmNameWEB1": "KHWeb01",
+        "vmNameWEB2": "KHWeb02",
+        "nicNameWEB1": "[concat(variables('vmNameWEB1'),'nic')]",
+        "nicNameWEB2": "[concat(variables('vmNameWEB2'),'nic')]",
+        "storageAccountNameWEB1": "[concat(uniquestring(resourceGroup().id), 'rhelvm1')]",
+        "storageAccountNameWEB2": "[concat(uniquestring(resourceGroup().id), 'rhelvm2')]",
+        "storageAccountType": "Standard_LRS",
+        "vmStorageAccountContainerName": "vhds",
+        "OSDiskName": "osdisk"
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName1')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName2')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "[variables('virtualNetworkName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('addressPrefix')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnetNameGW')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefixGW')]"
+                        }
+                    },
+                    {
+                        "name": "[variables('subnetNameWEB')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetPrefixWEB')]"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountNameWEB1')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountNameWEB2')]",
+            "apiVersion": "[variables('apiVersion')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "accountType": "[variables('storageAccountType')]"
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicNameWEB1')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRefWEB')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicNameWEB2')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRefWEB')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmNameWEB1')]",
+            "apiVersion": "2015-06-15",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountNameWEB1'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWEB1'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A0"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "RedHat",
+                        "offer": "RHEL",
+                        "sku": "7.2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "web1os",
+                        "createOption": "FromImage",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('storageAccountNameWEB1'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmNameWEB1')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false
+                    },
+                    "secrets": [],
+                    "adminUsername": "kehowli",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicNameWEB1'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmNameWEB2')]",
+            "apiVersion": "2015-06-15",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountNameWEB2'))]",
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameWEB2'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_A0"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "RedHat",
+                        "offer": "RHEL",
+                        "sku": "7.2",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "web1os",
+                        "createOption": "FromImage",
+                        "vhd": {
+                            "uri": "[concat('http://',variables('storageAccountNameWEB2'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('OSDiskName'),'.vhd')]"
+                        },
+                        "caching": "ReadWrite"
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmNameWEB2')]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false
+                    },
+                    "secrets": [],
+                    "adminUsername": "kehowli",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicNameWEB2'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion')]",
+            "name": "[variables('applicationGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName1'))]",
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName2'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "[parameters('skuName')]",
+                    "tier": "Standard",
+                    "capacity": "[parameters('capacity')]"
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetRefGW')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGatewayFrontendIP1",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('publicIPRef1')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "appGatewayFrontendPort",
+                        "properties": {
+                            "Port": 80
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "appGatewayBackendPool",
+                        "properties": {
+                            "BackendAddresses": [
+                                {
+                                    "IpAddress": "[parameters('backendIpAddress1')]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "appGatewayBackendHttpSettings",
+                        "properties": {
+                            "Port": 80,
+                            "Protocol": "Http",
+                            "CookieBasedAffinity": "Disabled"
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "appGatewayHttpListener1",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "Id": "[concat(variables('applicationGatewayID'), '/frontendIPConfigurations/appGatewayFrontendIP1')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(variables('applicationGatewayID'), '/frontendPorts/appGatewayFrontendPort')]"
+                            },
+                            "Protocol": "Http"
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "Name": "rule1",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('applicationGatewayID'), '/httpListeners/appGatewayHttpListener1')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('applicationGatewayID'), '/backendAddressPools/appGatewayBackendPool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('applicationGatewayID'), '/backendHttpSettingsCollection/appGatewayBackendHttpSettings')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
