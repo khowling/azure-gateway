@@ -1,7 +1,7 @@
 'use strict;'
 
 import React, {Component} from 'react';
-import io from 'socket.io-client';
+import Server from './modules/server.es6'
 //import ReactDOM from 'react-dom';
 
 export default class App extends Component {
@@ -9,23 +9,14 @@ export default class App extends Component {
    constructor (props) {
      super(props);
      console.log ('App: constructor');
+     this.server = new Server(props.buildprops.server_url);
      this.state = { booted: false, booterr: false,  bootmsg: "not booted"};
    }
 
   componentWillMount() {
-    let socket = io(this.props.buildprops.server_url);
-    socket.on('connect', () => {
-        socket.emit('join', 'stats');
-        this.setState({booted: true, rev: ''})
-    });
-    socket.on('newstat', (data) => {
-        console.log ('got data ' + data);
-         this.setState({rev: this.state.rev + ' : ' + data});
-    });
-    socket.on('disconnect', () => {
-         this.setState({booted: false})
-    });
-
+    this.server.reportClient().then((s => {
+      this.setState({ booted: true});
+    }));
   }
 
 

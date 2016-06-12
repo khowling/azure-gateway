@@ -29,6 +29,6 @@ new WebpackDevServer(webpack(config), {
             console.log(err);
         }
         console.log('Weboack dev-server Listening at %s', serverurl);
-        opn(serverurl);
+        //opn(serverurl);
     });
 
