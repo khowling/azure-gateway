@@ -38,6 +38,19 @@
                 ]
             }
        },
+       
+       { 
+            "apiVersion" : "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses", 
+            "name": "vmweb1vip", 
+            "location": "North Europe",
+            "properties": { 
+                "publicIPAllocationMethod": "Dynamic", 
+                "dnsSettings": { 
+                    "domainNameLabel": "vmweb1vip" 
+                }
+            }
+       },
        { 
             "apiVersion" : "2016-03-30",
             "type": "Microsoft.Network/publicIPAddresses", 
@@ -110,19 +123,71 @@
                 }
             }
        },
+       { 
+            "apiVersion" : "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses", 
+            "name": "pVIP7", 
+            "location": "North Europe",
+            "properties": { 
+                "publicIPAllocationMethod": "Dynamic", 
+                "dnsSettings": { 
+                    "domainNameLabel": "pvip7" 
+                }
+            }
+       },
+       { 
+            "apiVersion" : "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses", 
+            "name": "pVIP8", 
+            "location": "North Europe",
+            "properties": { 
+                "publicIPAllocationMethod": "Dynamic", 
+                "dnsSettings": { 
+                    "domainNameLabel": "pvip8" 
+                }
+            }
+       },
+        { 
+            "apiVersion" : "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses", 
+            "name": "pVIP9", 
+            "location": "North Europe",
+            "properties": { 
+                "publicIPAllocationMethod": "Dynamic", 
+                "dnsSettings": { 
+                    "domainNameLabel": "pvip9" 
+                }
+            }
+       },
+       { 
+            "apiVersion" : "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses", 
+            "name": "pVIP10", 
+            "location": "North Europe",
+            "properties": { 
+                "publicIPAllocationMethod": "Dynamic", 
+                "dnsSettings": { 
+                    "domainNameLabel": "pvip10" 
+                }
+            }
+       },
        {
            "apiVersion" : "2016-03-30",
            "type": "Microsoft.Network/loadBalancers",
            "name": "PublicLB",
            "location": "North Europe",
            "dependsOn": [ 
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP1')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP2')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP3')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP4')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP5')]",
-                "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP6')]",
-                "[concat('Microsoft.Network/virtualNetworks/', 'Vnet')]"
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP1')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP2')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP3')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP4')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP5')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP6')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP7')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP8')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP9')]",
+               "[concat('Microsoft.Network/publicIPAddresses/', 'pVIP10')]",
+               "[concat('Microsoft.Network/virtualNetworks/', 'Vnet')]"
             ], 
            "properties": {
                "frontendIPConfigurations": [
@@ -169,8 +234,24 @@
                    {
                        "name": "IP6",
                        "properties" : {
-                          "publicIPAddress":{ 
+                         "publicIPAddress":{ 
                             "id": "[resourceId('Microsoft.Network/publicIPAddresses','pVIP6')]"
+                          }
+                       }
+                   },
+                   {
+                       "name": "IP7",
+                       "properties" : {
+                          "publicIPAddress":{ 
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses','pVIP7')]"
+                          }
+                       }
+                   },
+                   {
+                       "name": "IP8",
+                       "properties" : {
+                         "publicIPAddress":{ 
+                            "id": "[resourceId('Microsoft.Network/publicIPAddresses','pVIP8')]"
                           }
                        }
                    }
@@ -181,26 +262,6 @@
                      } 
                 ], 
                 "loadBalancingRules": [
-                    {
-                        "name": "sshIP1",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/frontendIPConfigurations/', 'IP1')]" 
-                            },
-                            "frontendPort": 22,
-                            "backendPort": 22,
-                            "enableFloatingIP": false,
-                            "idleTimeoutInMinutes": 4,
-                            "protocol": "Tcp",
-                            "loadDistribution": "Default",
-                            "backendAddressPool": {
-                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/backendAddressPools/', 'PublicLB_BackendPool')]"
-                            },
-                            "probe": {
-                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/probes/', 'ssh')]"
-                            }
-                        }
-                    },
                     {
                         "name": "webIP1",
                         "properties": {
@@ -320,18 +381,49 @@
                                 "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/probes/', 'web85')]"
                             }
                         }
+                    },
+                    {
+                        "name": "webIP7",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/frontendIPConfigurations/', 'IP7')]" 
+                            },
+                            "frontendPort": 80,
+                            "backendPort": 86,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/backendAddressPools/', 'PublicLB_BackendPool')]"
+                            },
+                            "probe": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/probes/', 'web86')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "webIP8",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/frontendIPConfigurations/', 'IP8')]" 
+                            },
+                            "frontendPort": 80,
+                            "backendPort": 87,
+                            "enableFloatingIP": false,
+                            "idleTimeoutInMinutes": 4,
+                            "protocol": "Tcp",
+                            "loadDistribution": "Default",
+                            "backendAddressPool": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/backendAddressPools/', 'PublicLB_BackendPool')]"
+                            },
+                            "probe": {
+                                "id": "[concat( resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/probes/', 'web87')]"
+                            }
+                        }
                     }
                 ],
                 "probes": [
-                    {
-                        "name": "ssh",
-                        "properties": {
-                            "protocol": "Tcp",
-                            "port": 22,
-                            "intervalInSeconds": 5,
-                            "numberOfProbes": 2
-                        }
-                    },
                     {
                         "name": "web80",
                         "properties": {
@@ -385,6 +477,24 @@
                             "intervalInSeconds": 5,
                             "numberOfProbes": 2
                         }
+                    },
+                    {
+                        "name": "web86",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 86,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
+                    },
+                    {
+                        "name": "web87",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "port": 87,
+                            "intervalInSeconds": 5,
+                            "numberOfProbes": 2
+                        }
                     }
                 ]
            }
@@ -404,7 +514,7 @@
             "name": "VMWeb1NIC1",
             "location": "North Europe",
             "dependsOn": [ 
-                "[concat('Microsoft.Network/loadBalancers/', 'PublicLB')]"
+                "[concat('Microsoft.Network/loadBalancers/', 'PublicLB')]",
             ], 
             "properties": {
                 "ipConfigurations": [
@@ -415,10 +525,13 @@
                                 "id": "[concat( resourceId('Microsoft.Network/virtualNetworks','Vnet'),'/subnets/','Vnet_DMZ')]"
                             },
                             "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": { 
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'vmweb1vip')]" 
+                            }, 
                             "loadBalancerBackendAddressPools": [ 
                                 { 
                                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers','PublicLB'), '/backendAddressPools/PublicLB_BackendPool')]" 
-                                } 
+                                }
                             ]
                         }
                     }
