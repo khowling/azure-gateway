@@ -10,28 +10,33 @@ some scale ability??
 redis - atomic
 ------
 
-KeyValue pair:
-GET / SET / INCR <key> <val>
+KeyValue pair <key> <string val>:
+  - atomic counters (no race conditions)
+  - can EXPIRE keys!
+GET / SET / INCR / APPEND <key> <val>
 EXISTS / DEL / expire <key>
 MGET / MSET <key1> <val1> <key2> <val2>
 
-Lists (Linked List, add quicky to left and right):
- - usecase - recent updates on social network, consumer/producer
+Lists of strings (Linked List, add quicky to left and right):
+ - usecase - recent updates on social network, consumer/producer, timeline
 LPUSH / RPUSH <list> <val> <val> <val> <...val>
+LINDEX <list> <idx> # get value at index
+LLEN <list> # length of list
+LREM <list> count value
 RPOP / LPOP <list> 
 LRANGE <list> <start_idx> <end_idx> # (0=start, -1=end) return range of values
 LTRIM <list> <start_idx> <end_idx> # (0=start, -1=end)trim list to jsut the rabge
 LPUSH / BRPOP - block remove item from list (pub/sub)
 RPOPLP
 
-Hash (used to store objects)
+Hash are maps between string fields and string values (used to store objects)
 HMSET <key> <prop1> <val1> <prop2> <val2> ...
 HGET <key> <prop>
 HGETALL <key>
 HINCRBY <key> <prop> number
 
-Set (unordered collections)
- - usecase - tagging.  (set key = newsWithPolitics - members _ids)
+Set unordered collection of Strings
+ - usecase - are good to represent relations - tagging.  (set key = newsWithPolitics - members _ids)
 SADD <key> <val1> <val2> ...
 SPOP <key>  # removes and returns random val in set
 SCARD <key> # of items in set
@@ -45,6 +50,16 @@ ZADD <key> <val score> <val1>  # score is a number that sorts the set
 ZRANGE /  ZREVRANGE <key> <startidx> <endidx> [withscores] # (0=start, -1=end) # returns range
 ZRANGEBYSCRORE <key> [<startidx> <endidx>] [-inf 1950] # inf=upto, 
 ZRANK <key> <val> : where is the set is the val?
+
+
+
+
+Commands
+ .pipeline() # pipe multiple commands to achive atomic operations.
+ .register_script() Redis offers server-side Lua scripting (like stored procedures)
+    return an object that can be used like a function to call the script inside Redis
+
+most flexible method for time series date combines: one or more Sorted Set and the Hash
 
 
 

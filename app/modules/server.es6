@@ -31,6 +31,7 @@ export default class Server {
        var client = new XMLHttpRequest();
        client.open(mode, this._host  + path);
        client.setRequestHeader ("Authorization", "OAuth " + "Junk");
+       client.setRequestHeader('Cache-Control', 'no-cache');
        client.withCredentials = true;
        if (mode === 'POST') {
          console.log ('_callServer: POSTING to ['+this._host  + path+']: ' + JSON.stringify(body));
@@ -56,17 +57,14 @@ export default class Server {
   }
 
 
-  reportClient() {
+  connectClient() {
     return new Promise( (resolve, reject) => {
-        let timestamp = new Date().getTime();
-        this._callServer('/ping?time=' + timestamp).then ((res1) => {
-            let pingt = new Date().getTime() - res1.pings.time;
-            console.log ('calling server with ' + pingt);
-            this._callServer('/reportPing?time=' + pingt).then ((res2) => {
-                console.log ('calling server with');
-                resolve (res2);
-            }, (err) => console.log ('err ' + err));
-        })
+      let timestamp = new Date().getTime();
+      this._callServer('/ping?time=' + timestamp).then ((res1) => {
+          let pingt = new Date().getTime() - res1.pings.time,
+              longPromis = this._callServer('/longPoll?time=' + pingt);
+          resolve ({ping: pingt, connection: longPromis});
+      });
     });
   }
 

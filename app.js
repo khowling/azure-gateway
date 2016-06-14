@@ -1,20 +1,20 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 
 // KH - Added for Session
-var Redis = require('ioredis');
 // redis://:authpassword@127.0.0.1:6378/4
 /* -- redis-cli commands
   > select 4
   > INFO keyspace
   > CONFIG GET databases
 */
-var redis = new Redis('redis://localhost:6379/4', {
+const Redis = require('ioredis');
+const redis = new Redis('redis://localhost:6379/4', {
   enableOfflineQueue: true,
   reconnectOnError: function (err) {
-    console.log('redis err');
+    console.log(`redis err ${err}`);
   },
   retryStrategy: function (times) {
     var delay = Math.min(times * 2, 2000);
@@ -31,11 +31,41 @@ redis.on("connect", (c) => console.log ('redis connected'));
 redis.on("ready", (c) => console.log ('redis ready'));
 redis.on("error", (c) => console.log (`error ${c}`));
 
-redis.subscribe('channel1', function (err, count) {
+const os = require('os');
+// add to head of list
+var nodeprocess = 0,
+    started = new Date().getTime();
+    requestscomplete = 0,
+    requestsstarted = 0,
+    requestsavgtime = 0;
+redis.incr('nodeprocess').then((r) => {
+  nodeprocess = r;
+  let key = `nodeprocess:${nodeprocess}`;
+  console.log (`redis ${key}`)
+  redis.multi()
+    .hmset (key, { 
+        starttime: new Date(),
+        "hostname": os.hostname()
+      })
+    .expire(key, 2).exec(() => console.log ('updated redis'));
+})
 
-});
-
-
+// every second write a new value
+setInterval (() => {
+  let key = `nodeprocess:${nodeprocess}`, 
+      reqcomp = requestscomplete,
+      reqopen = requestsstarted,
+      reqtime = requestsavgtime;
+  requestscomplete = 0; requestsstarted = 0; requestsavgtime = 0;
+  redis.multi()
+    .hmset (key, {
+      "uptime": new Date().getTime() - started,
+      "reqcomp": reqcomp,
+      "reqopen": reqopen,
+      "reqtime": reqtime
+    })
+  .expire(key, 2).exec(() => console.log ('updated redis'));
+}, 1000)
 
 var session = require('express-session');
 var RedisStore = require('connect-redis')(session);
@@ -63,28 +93,49 @@ app.all('/*', function(req, res, next) {
   //res.header("Access-Control-Allow-Headers", "application/json;charset=UTF-8");
   if (req.method === 'OPTIONS')
     res.send();
-  else
+  else {
+    requestsstarted++;
     next();
+  }
+});
+
+app.get('/nothing', function(req, res) {
+      requestscomplete++;
+      res.send();
 });
 
 app.get('/ping', function(req, res) {
   let t = req.query.time, st = new Date().getTime();
   console.log ('pingme ' + t);
-
-  req.session.client = {
-    'username': "who are you dude?",
-    'user-agent': req.headers['user-agent'],
-    'ip': req.headers['x-forwarded-for'] || req.connection.remoteAddress
-  };
-
+  requestscomplete++;
   res.json({pings: { time: t, stime: st}});
 });
 
-app.get('/reportPing', function(req, res) {
+app.get('/longPoll', function(req, res) {
   let t = req.query.time;
-  console.log ('pingme report ' + t + ' : ' + JSON.stringify(req.session.client));
-  req.session.clientPing = t;
-  res.json({});
+
+ // if (t) {
+    console.log ('longPoll report ' + t + ' : ' + JSON.stringify(req.session.client));
+    req.session.clientPing = t;
+
+    redis.multi()
+      .hmset (`clientconnected:${req.session.id}`, { 
+          "nodeprocess": `nodeprocess:${nodeprocess}`,
+          "ping": t,
+          "useragent": req.headers['user-agent'],
+          "ip": req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        })
+      .expire(`clientconnected:${req.session.id}`, 8).exec(() => console.log ('updated redis, 8 sec ttl'));
+
+    let lp = setTimeout(() => {
+      requestscomplete++;
+      res.json({keepalive: true});
+    }, 5000) // 5 second longpoll;
+
+//  } else {
+ //   requestscomplete++;
+ //   res.send();
+ // }
 });
 
 // catch 404 and forward to error handler

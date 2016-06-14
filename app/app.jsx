@@ -14,9 +14,26 @@ export default class App extends Component {
    }
 
   componentWillMount() {
-    this.server.reportClient().then((s => {
-      this.setState({ booted: true});
-    }));
+    console.log ('App = componentWillMount');
+    let looptimes = 0, 
+        longPollLoop = () => {
+          console.log ('starting longPollLoop, running ping');
+          looptimes++;
+          this.server.connectClient().then((response) => {
+            let {ping, connection} = response;
+            console.log ('got ping, updating state');
+            this.setState({ "booted": true, "ping": ping, "looptimes": looptimes}, () => {
+              console.log ('ok, and got long');
+              connection.then((server_data) => {
+                if (server_data.keepalive == true) {
+                  console.log ('got keepalive');
+                  longPollLoop();
+                }
+              })
+            });
+          });
+        }
+    longPollLoop();
   }
 
 
@@ -24,7 +41,7 @@ export default class App extends Component {
      //console.log ("App: render");
      if (this.state.booted)  return (
          <div className="">
-            Connected received {this.state.rev}
+            Connected received ping: {this.state.ping} ({this.state.looptimes})
          </div>
        );
      else if (this.state.booterr) return (
