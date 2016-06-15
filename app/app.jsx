@@ -2,6 +2,8 @@
 
 import React, {Component} from 'react';
 import Server from './modules/server.es6'
+import {Glass, ToDoList} from './components/glass.jsx'
+
 //import ReactDOM from 'react-dom';
 
 export default class App extends Component {
@@ -14,39 +16,36 @@ export default class App extends Component {
    }
 
   componentWillMount() {
-    console.log ('App = componentWillMount');
     let looptimes = 0, 
         longPollLoop = () => {
-          console.log ('starting longPollLoop, running ping');
           looptimes++;
           this.server.connectClient().then((response) => {
             let {ping, connection} = response;
-            console.log ('got ping, updating state');
-            this.setState({ "booted": true, "ping": ping, "looptimes": looptimes}, () => {
-              console.log ('ok, and got long');
-              connection.then((server_data) => {
-                if (server_data.keepalive == true) {
-                  console.log ('got keepalive');
-                  longPollLoop();
-                }
-              })
-            });
-          });
+            this.setState({ "booted": true, "ping": ping, "looptimes": looptimes});
+
+            connection.then((server_data) => {
+              console.log (`longPollLoop: got server_data`);
+              if (server_data.keepalive == true) {
+                longPollLoop();
+              }
+            }, (err) => this.setState({ "booted": false, booterr: true, bootmsg: "disconnected from server"}));
+          }, (err) => this.setState({ "booted": false, booterr: true, bootmsg: "disconnected from server"}));
         }
     longPollLoop();
   }
 
 
    render () {
-     //console.log ("App: render");
      if (this.state.booted)  return (
-         <div className="">
+         <div className="col-sm-12  col-lg-12 main">
             Connected received ping: {this.state.ping} ({this.state.looptimes})
+            <Glass title="keith"/>
+            <ToDoList/>
          </div>
        );
      else if (this.state.booterr) return (
          <div>
-         Looks like your user is not correctly configured, please email the system ower with this message {this.state.bootmsg}
+         {this.state.bootmsg}, refresh to try again
          </div>
        );
      else return (

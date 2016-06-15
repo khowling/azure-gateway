@@ -87,7 +87,7 @@ app.use(session({
 app.all('/*', function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "http://localhost:8000");
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With,Authorization,Content-Type");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With,Authorization,Content-Type,Cache-Control");
   res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
   //res.header("Access-Control-Allow-Headers", "Authorization");
   //res.header("Access-Control-Allow-Headers", "application/json;charset=UTF-8");
@@ -115,7 +115,7 @@ app.get('/longPoll', function(req, res) {
   let t = req.query.time;
 
  // if (t) {
-    console.log ('longPoll report ' + t + ' : ' + JSON.stringify(req.session.client));
+    console.log ('holding longPoll' + t + ' : ' + JSON.stringify(req.session.id));
     req.session.clientPing = t;
 
     redis.multi()

@@ -47,7 +47,7 @@ module.exports = {
               loader: htmlLoader
             },
             {
-              test: /\.scss$/,
+              test: /\.scss$|\.css$/,
               loaders: ["style", "css", "sass"]
             }
         ]
