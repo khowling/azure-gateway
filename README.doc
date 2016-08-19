@@ -17,8 +17,9 @@ GET / SET / INCR / APPEND <key> <val>
 EXISTS / DEL / expire <key>
 MGET / MSET <key1> <val1> <key2> <val2>
 
-Lists of strings (Linked List, add quicky to left and right):
- - usecase - recent updates on social network, consumer/producer, timeline
+Lists of strings sorted by insertion order  (Linked List)
+ - very quick to insert/read left and right, not so quick in middle):
+ - usecase - timeline on social network, consumer/producer, timeline
 LPUSH / RPUSH <list> <val> <val> <val> <...val>
 LINDEX <list> <idx> # get value at index
 LLEN <list> # length of list

@@ -9,6 +9,7 @@ export default class Server {
       throw "Server() only allow to construct once";
     }
     this._host = server_url;
+    this._offset = 0;
     instance = this;
     this._session = {};
   }
@@ -74,14 +75,20 @@ export default class Server {
 
   connectClient() {
     return new Promise( (resolve, reject) => {
-      let timestamp = new Date().getTime();
-      console.log ('connectClient: calling /ping');
-      this._callServer('/ping?time=' + timestamp).then ((res1) => {
-          let pingt = new Date().getTime() - res1.pings.time;
-          console.log ('connectClient: got /ping, calling /longPoll and resolving connectClient promise');
-          resolve ({ping: pingt, connection: this._callServer('/longPoll?time=' + pingt)});
+      this._callServer('/connect?time=' + new Date().getTime()).then (({original_time, server_time}) => {
+        let client_timeroundtrip = (new Date().getTime() - original_time)/2
+        this._offset = parseInt(server_time) - parseInt(original_time) + client_timeroundtrip
+        console.log (`connectClient: got /connect client_timeroundtrip: ${client_timeroundtrip}, server/client time diff: ${this._offset}`);
+        resolve (client_timeroundtrip);
       }, reject);
     });
+  }
+  get offset() {
+      return this._offset;
+    }
+
+  longPoll (register_ptime) {
+     return this._callServer('/longPoll' + (register_ptime && ('?time=' + register_ptime) || ''))
   }
 
   logOut() {
